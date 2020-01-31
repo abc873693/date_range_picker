@@ -58,6 +58,7 @@ class _DatePickerHeader extends StatelessWidget {
     @required this.mode,
     @required this.onModeChanged,
     @required this.orientation,
+    this.useRocYear = false,
   })  : assert(selectedFirstDate != null),
         assert(mode != null),
         assert(orientation != null),
@@ -68,6 +69,7 @@ class _DatePickerHeader extends StatelessWidget {
   final DatePickerMode mode;
   final ValueChanged<DatePickerMode> onModeChanged;
   final Orientation orientation;
+  final bool useRocYear;
 
   void _handleChangeMode(DatePickerMode value) {
     if (value != mode) onModeChanged(value);
@@ -123,6 +125,8 @@ class _DatePickerHeader extends StatelessWidget {
         break;
     }
     Widget renderYearButton(date) {
+      if(useRocYear)
+        date = DateTime(date.year - 1911, date.month, date.day);
       return new IgnorePointer(
         ignoring: mode != DatePickerMode.day,
         ignoringSemantics: false,
@@ -284,6 +288,7 @@ class DayPicker extends StatelessWidget {
     @required this.lastDate,
     @required this.displayedMonth,
     this.selectableDayPredicate,
+    this.useRocYear = false,
   })  : assert(selectedFirstDate != null),
         assert(currentDate != null),
         assert(onChanged != null),
@@ -318,6 +323,9 @@ class DayPicker extends StatelessWidget {
 
   /// Optional user supplied predicate function to customize selectable days.
   final SelectableDayPredicate selectableDayPredicate;
+
+  /// Year use R.O.C Year Format
+  final bool useRocYear;
 
   /// Builds widgets showing abbreviated days of week. The first widget in the
   /// returned list corresponds to the first day of week for the current locale.
@@ -550,7 +558,7 @@ class DayPicker extends StatelessWidget {
         labels.add(dayWidget);
       }
     }
-
+    final _displayedMonth = (useRocYear) ? displayedMonth : DateTime(displayedMonth.year - 1911, displayedMonth.month, displayedMonth.day);
     return new Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
       child: new Column(
@@ -560,7 +568,7 @@ class DayPicker extends StatelessWidget {
             child: new Center(
               child: new ExcludeSemantics(
                 child: new Text(
-                  localizations.formatMonthYear(displayedMonth),
+                  localizations.formatMonthYear(_displayedMonth),
                   style: themeData.textTheme.subhead,
                 ),
               ),
@@ -604,6 +612,7 @@ class MonthPicker extends StatefulWidget {
     @required this.firstDate,
     @required this.lastDate,
     this.selectableDayPredicate,
+    this.useRocYear = false,
   })  : assert(selectedFirstDate != null),
         assert(onChanged != null),
         assert(!firstDate.isAfter(lastDate)),
@@ -630,6 +639,9 @@ class MonthPicker extends StatefulWidget {
 
   /// Optional user supplied predicate function to customize selectable days.
   final SelectableDayPredicate selectableDayPredicate;
+
+  /// Year use R.O.C Year Format
+  final bool useRocYear;
 
   @override
   _MonthPickerState createState() => new _MonthPickerState();
@@ -734,6 +746,7 @@ class _MonthPickerState extends State<MonthPicker>
       lastDate: widget.lastDate,
       displayedMonth: month,
       selectableDayPredicate: widget.selectableDayPredicate,
+      useRocYear: widget.useRocYear,
     );
   }
 
@@ -896,6 +909,7 @@ class YearPicker extends StatefulWidget {
     @required this.onChanged,
     @required this.firstDate,
     @required this.lastDate,
+    this.useRocYear = false,
   })  : assert(selectedFirstDate != null),
         assert(onChanged != null),
         assert(!firstDate.isAfter(lastDate)),
@@ -915,6 +929,9 @@ class YearPicker extends StatefulWidget {
 
   /// The latest date the user is permitted to pick.
   final DateTime lastDate;
+
+  /// Year use R.O.C Year Format
+  final bool useRocYear;
 
   @override
   _YearPickerState createState() => new _YearPickerState();
@@ -977,7 +994,7 @@ class _YearPickerState extends State<YearPicker> {
           child: new Center(
             child: new Semantics(
               selected: isSelected,
-              child: new Text(year.toString(), style: itemStyle),
+              child: new Text('${year - (widget.useRocYear? 1911 : 0)}', style: itemStyle),
             ),
           ),
         );
@@ -995,6 +1012,7 @@ class _DatePickerDialog extends StatefulWidget {
     this.lastDate,
     this.selectableDayPredicate,
     this.initialDatePickerMode,
+    this.useRocYear = false,
   }) : super(key: key);
 
   final DateTime initialFirstDate;
@@ -1003,6 +1021,7 @@ class _DatePickerDialog extends StatefulWidget {
   final DateTime lastDate;
   final SelectableDayPredicate selectableDayPredicate;
   final DatePickerMode initialDatePickerMode;
+  final bool useRocYear;
 
   @override
   _DatePickerDialogState createState() => new _DatePickerDialogState();
@@ -1135,6 +1154,7 @@ class _DatePickerDialogState extends State<_DatePickerDialog> {
           onChanged: _handleYearChanged,
           firstDate: widget.firstDate,
           lastDate: widget.lastDate,
+          useRocYear: widget.useRocYear,
         );
     }
     return null;
@@ -1172,6 +1192,7 @@ class _DatePickerDialogState extends State<_DatePickerDialog> {
         mode: _mode,
         onModeChanged: _handleModeChanged,
         orientation: orientation,
+        useRocYear: widget.useRocYear,
       );
       switch (orientation) {
         case Orientation.portrait:
@@ -1274,6 +1295,7 @@ Future<List<DateTime>> showDatePicker({
   DatePickerMode initialDatePickerMode = DatePickerMode.day,
   Locale locale,
   TextDirection textDirection,
+  bool useRocYear = false,
 }) async {
   assert(!initialFirstDate.isBefore(firstDate),
       'initialDate must be on or after firstDate');
@@ -1298,6 +1320,7 @@ Future<List<DateTime>> showDatePicker({
     lastDate: lastDate,
     selectableDayPredicate: selectableDayPredicate,
     initialDatePickerMode: initialDatePickerMode,
+    useRocYear: useRocYear,
   );
 
   if (textDirection != null) {
